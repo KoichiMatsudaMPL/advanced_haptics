@@ -4,6 +4,7 @@ import CoreHaptics
 
 public class AdvancedHapticsPlugin: NSObject, FlutterPlugin {
     private var engine: CHHapticEngine?
+    private var waveformPlayer: CHHapticPlayer?
 
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "com.example/advanced_haptics", binaryMessenger: registrar.messenger())
@@ -22,17 +23,15 @@ public class AdvancedHapticsPlugin: NSObject, FlutterPlugin {
             engine = try CHHapticEngine()
             try engine?.start()
             
-            // Handle engine resets
             engine?.resetHandler = { [weak self] in
-                print("Haptic engine reset")
+                print("Haptic engine reset, restarting...")
                 do {
                     try self?.engine?.start()
                 } catch {
-                    print("Failed to restart the engine: \(error)")
+                    print("Failed to restart the haptic engine: \(error)")
                 }
             }
             
-            // Handle engine stop
             engine?.stoppedHandler = { reason in
                 print("Haptic engine stopped for reason: \(reason.rawValue)")
             }
@@ -51,6 +50,15 @@ public class AdvancedHapticsPlugin: NSObject, FlutterPlugin {
             }
             return
         }
+
+        if engine.needsAudioCommands == false { 
+            do {
+                try engine.start()
+            } catch {
+                result(FlutterError(code: "ENGINE_RESTART_FAILED", message: "Haptic engine was stopped and could not be restarted.", details: error.localizedDescription))
+                return
+            }
+        }
         
         switch call.method {
         case "hasCustomHapticsSupport":
@@ -63,7 +71,6 @@ public class AdvancedHapticsPlugin: NSObject, FlutterPlugin {
                 return
             }
             
-            // Find the asset in the app bundle
             let key = FlutterDartProject.lookupKey(forAsset: path)
             guard let ahapUrl = Bundle.main.url(forResource: key, withExtension: nil) else {
                  result(FlutterError(code: "FILE_NOT_FOUND", message: "AHAP file not found in assets", details: path))
@@ -76,10 +83,7 @@ public class AdvancedHapticsPlugin: NSObject, FlutterPlugin {
             } catch {
                 result(FlutterError(code: "PLAYBACK_ERROR", message: "Failed to play AHAP pattern", details: error.localizedDescription))
             }
-
         case "playWaveform":
-            // Emulation of waveform on iOS
-            // This is a simple interpretation. A more complex one could be built.
             guard let args = call.arguments as? [String: Any],
                   let timings = args["timings"] as? [Double],
                   let amplitudes = args["amplitudes"] as? [Double] else {
@@ -90,24 +94,24 @@ public class AdvancedHapticsPlugin: NSObject, FlutterPlugin {
             var events = [CHHapticEvent]()
             var relativeTime: TimeInterval = 0
             for i in 0..<timings.count {
-                if i % 2 != 0 { // Only create events for the "on" durations
+                if i % 2 != 0 {
                     let intensity = CHHapticEventParameter(parameterID: .hapticIntensity, value: Float(amplitudes[i] / 255.0))
                     let sharpness = CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.8)
                     let event = CHHapticEvent(eventType: .hapticTransient, parameters: [intensity, sharpness], relativeTime: relativeTime)
                     events.append(event)
                 }
-                relativeTime += timings[i] / 1000.0 // Convert ms to seconds
+                relativeTime += timings[i] / 1000.0
             }
 
             do {
+                try self.waveformPlayer?.stop(atTime: 0)
                 let pattern = try CHHapticPattern(events: events, parameters: [])
-                let player = try engine.makePlayer(with: pattern)
-                try player.start(atTime: 0)
+                self.waveformPlayer = try engine.makePlayer(with: pattern)
+                try self.waveformPlayer?.start(atTime: 0)
                 result(nil)
             } catch {
                 result(FlutterError(code: "PLAYBACK_ERROR", message: "Failed to play emulated waveform", details: error.localizedDescription))
             }
-
         case "success":
              do {
                 let intensity = CHHapticEventParameter(parameterID: .hapticIntensity, value: 1)
@@ -121,10 +125,16 @@ public class AdvancedHapticsPlugin: NSObject, FlutterPlugin {
             } catch {
                 result(FlutterError(code: "PLAYBACK_ERROR", message: "Failed to play success pattern", details: error.localizedDescription))
             }
+
             
         case "stop":
-            engine.stop(completionHandler: nil)
-            result(nil)
+            do {
+                try self.waveformPlayer?.stop(atTime: 0)
+                self.waveformPlayer = nil // Release the player
+                result(nil)
+            } catch {
+                result(FlutterError(code: "STOP_ERROR", message: "Failed to stop waveform player", details: error.localizedDescription))
+            }
             
         default:
             result(FlutterError(code: "NOT_IMPLEMENTED", message: "Method not implemented", details: nil))
