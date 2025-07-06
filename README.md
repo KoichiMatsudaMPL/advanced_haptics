@@ -8,8 +8,6 @@ A Flutter plugin for playing powerful, custom haptic feedback patterns. This pac
 [![pub version](https://img.shields.io/pub/v/advanced_haptics.svg)](https://pub.dev/packages/advanced_haptics)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-*(A GIF demonstrating the example app would be perfect here!)*
-
 ## Features
 
 -   **Unified API:** A single, easy-to-use Dart API for both platforms.
