@@ -16,3 +16,7 @@
 ## 0.0.4
 
 - Updated Fixing play back issues on ios in waveform method
+
+## 0.0.5
+
+- Updated Fixing play back issues on ios in waveform method

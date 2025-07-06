@@ -4,7 +4,7 @@ import CoreHaptics
 
 public class AdvancedHapticsPlugin: NSObject, FlutterPlugin {
     private var engine: CHHapticEngine?
-    private var waveformPlayer: CHHapticPlayer?
+    private var waveformPlayer: CHHapticPatternPlayer?
 
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "com.example/advanced_haptics", binaryMessenger: registrar.messenger())
