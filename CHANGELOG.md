@@ -28,3 +28,7 @@
 ## 1.0.0
 
 - Proper launch
+
+## 1.0.1
+
+- Updated ReadMe
