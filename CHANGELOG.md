@@ -24,3 +24,7 @@
 ## 0.0.6
 
 - **FIX:** Resolved a build error on iOS (`Cannot find type 'CHHapticPlayer' in scope`) by adding the necessary `CoreHaptics` framework import.
+
+## 1.0.0
+
+- Proper launch
