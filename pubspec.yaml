@@ -1,7 +1,7 @@
 name: advanced_haptics
 description: "A new Flutter plugin project."
 version: 0.0.1
-homepage:
+homepage: https://github.com/miracle101000/advanced_haptics
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
