@@ -52,4 +52,84 @@ class AdvancedHaptics {
   static Future<void> stop() async {
     await _channel.invokeMethod('stop');
   }
+
+// --------------------------------------------
+// 🔽 Utility Presets (with parameter docs)
+// --------------------------------------------
+
+  /// Plays a quick, light tap haptic feedback.
+  ///
+  /// [timings] defines the duration (in ms) of each segment in the pattern.
+  /// [amplitudes] defines the strength of vibration for each segment (0–255).
+  /// Must be the same length as [timings].
+  static Future<void> lightTap({
+    List<int> timings = const [0, 30],
+    List<int> amplitudes = const [180, 0],
+  }) async {
+    await playWaveform(timings, amplitudes);
+  }
+
+  /// Plays a medium-strength haptic tap.
+  ///
+  /// Stronger than [lightTap], but softer and shorter than [heavyRumble].
+  ///
+  /// [timings] - Duration of each vibration segment in ms.
+  /// [amplitudes] - Intensity of each segment (0–255).
+  static Future<void> mediumTap({
+    List<int> timings = const [0, 50],
+    List<int> amplitudes = const [200, 0],
+  }) async {
+    await playWaveform(timings, amplitudes);
+  }
+
+  /// Plays a strong, short "heavy rumble" haptic.
+  ///
+  /// [timings] - Duration of the vibration (e.g., 200ms).
+  /// [amplitudes] - Vibration intensity (0–255).
+  static Future<void> heavyRumble({
+    List<int> timings = const [0, 200],
+    List<int> amplitudes = const [255, 0],
+  }) async {
+    await playWaveform(timings, amplitudes);
+  }
+
+  /// Plays a double-tap success haptic pattern.
+  ///
+  /// This gives a quick buzz-buzz feedback, suitable for confirming success or completion.
+  ///
+  /// [timings] - Alternating pause/on durations.
+  /// [amplitudes] - Vibration intensity of each step (0–255).
+  static Future<void> successBuzz({
+    List<int> timings = const [0, 50, 100, 50],
+    List<int> amplitudes = const [255, 0, 255, 0],
+  }) async {
+    await playWaveform(timings, amplitudes);
+  }
+
+  /// Plays an error-like feedback with two longer buzzes.
+  ///
+  /// Good for denoting failure, blocking actions, or system alerts.
+  ///
+  /// [timings] - Durations of pause/on segments.
+  /// [amplitudes] - Vibration intensity levels (0–255).
+  static Future<void> error({
+    List<int> timings = const [0, 100, 50, 100],
+    List<int> amplitudes = const [255, 0, 200, 0],
+  }) async {
+    await playWaveform(timings, amplitudes);
+  }
+
+  /// Plays a short, crisp selection click haptic.
+  ///
+  /// Best used for subtle UI events like item selection or toggles.
+  ///
+  /// [timings] - Duration of the click (typically <30ms).
+  /// [amplitudes] - Vibration strength (0–255).
+  static Future<void> selectionClick({
+    List<int> timings = const [0, 20],
+    List<int> amplitudes = const [120, 0],
+  }) async {
+    await playWaveform(timings, amplitudes);
+  }
+
 }
