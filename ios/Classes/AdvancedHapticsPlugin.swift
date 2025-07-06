@@ -2,12 +2,12 @@ import Flutter
 import UIKit
 import CoreHaptics
 
-public class SwiftAdvancedHapticsPlugin: NSObject, FlutterPlugin {
+public class AdvancedHapticsPlugin: NSObject, FlutterPlugin {
     private var engine: CHHapticEngine?
 
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "com.example/advanced_haptics", binaryMessenger: registrar.messenger())
-        let instance = SwiftAdvancedHapticsPlugin()
+        let instance = AdvancedHapticsPlugin()
         registrar.addMethodCallDelegate(instance, channel: channel)
     }
     
