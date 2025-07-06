@@ -20,3 +20,7 @@
 ## 0.0.5
 
 - Updated Fixing play back issues on ios in waveform method
+
+## 0.0.6
+
+- **FIX:** Resolved a build error on iOS (`Cannot find type 'CHHapticPlayer' in scope`) by adding the necessary `CoreHaptics` framework import.

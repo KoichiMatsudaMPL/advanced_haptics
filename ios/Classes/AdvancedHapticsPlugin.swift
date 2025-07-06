@@ -51,15 +51,6 @@ public class AdvancedHapticsPlugin: NSObject, FlutterPlugin {
             return
         }
 
-        if engine.needsAudioCommands == false { 
-            do {
-                try engine.start()
-            } catch {
-                result(FlutterError(code: "ENGINE_RESTART_FAILED", message: "Haptic engine was stopped and could not be restarted.", details: error.localizedDescription))
-                return
-            }
-        }
-        
         switch call.method {
         case "hasCustomHapticsSupport":
             result(CHHapticEngine.capabilitiesForHardware().supportsHaptics)
