@@ -4,3 +4,7 @@
 - Support for Android waveform patterns.
 - Support for iOS Core Haptics via `.ahap` files.
 - Added predefined patterns and device support checking.
+
+## 0.0.2
+
+- Updated ReadMe
