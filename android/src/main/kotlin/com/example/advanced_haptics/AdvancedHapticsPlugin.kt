@@ -26,53 +26,85 @@ class AdvancedHapticsPlugin: FlutterPlugin, MethodCallHandler {
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
         when (call.method) {
             "hasCustomHapticsSupport" -> {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    result.success(vibrator?.hasAmplitudeControl() ?: false)
-                } else {
-                    result.success(false)
-                }
+                val hasSupport = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    vibrator?.hasAmplitudeControl() ?: false
+                } else false
+                result.success(hasSupport)
             }
+
             "playWaveform" -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     val timings = call.argument<ArrayList<Int>>("timings")?.map { it.toLong() }?.toLongArray()
                     val amplitudes = call.argument<ArrayList<Int>>("amplitudes")?.toIntArray()
-                    if (timings != null && amplitudes != null) {
-                        val effect = VibrationEffect.createWaveform(timings, amplitudes, -1) // -1 means no repeat
-                        vibrator?.vibrate(effect)
-                        result.success(null)
+                    val repeat = call.argument<Int>("repeat") ?: -1
+
+                    if (timings != null && amplitudes != null && timings.size == amplitudes.size) {
+                        try {
+                            val effect = VibrationEffect.createWaveform(timings, amplitudes, repeat)
+                            vibrator?.vibrate(effect)
+                            result.success(null)
+                        } catch (e: Exception) {
+                            result.error("VIBRATION_ERROR", e.message, null)
+                        }
                     } else {
-                        result.error("INVALID_ARGS", "Timings or amplitudes are null", null)
+                        result.error("INVALID_ARGS", "Timings and amplitudes must not be null and must be equal length", null)
                     }
                 } else {
-                    result.error("UNSUPPORTED_API", "Waveform vibrations require Android API 26+", null)
+                    vibrator?.vibrate(200)
+                    result.success(null)
                 }
             }
+
+            "playPredefined" -> {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    val effectId = call.argument<Int>("effectId") ?: VibrationEffect.EFFECT_CLICK
+                    try {
+                        val effect = VibrationEffect.createPredefined(effectId)
+                        vibrator?.vibrate(effect)
+                        result.success(null)
+                    } catch (e: Exception) {
+                        result.error("PREDEFINED_ERROR", e.message, null)
+                    }
+                } else {
+                    result.error("UNSUPPORTED_API", "Predefined effects require Android API 29+", null)
+                }
+            }
+
             "playAhap" -> {
-                // Fallback for .ahap on Android
+                // Fallback implementation for Android
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val effect = VibrationEffect.createWaveform(longArrayOf(0, 100, 50, 100), intArrayOf(0, 255, 0, 150), -1)
+                    val effect = VibrationEffect.createWaveform(
+                        longArrayOf(0, 100, 50, 100),
+                        intArrayOf(0, 255, 0, 150),
+                        -1
+                    )
                     vibrator?.vibrate(effect)
                 } else {
-                    vibrator?.vibrate(200) // Simple vibration for older APIs
+                    vibrator?.vibrate(200)
                 }
                 result.success(null)
             }
+
             "success" -> {
-                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val effect = VibrationEffect.createWaveform(longArrayOf(0, 50, 100, 50), intArrayOf(0, 150, 0, 150), -1)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val effect = VibrationEffect.createWaveform(
+                        longArrayOf(0, 50, 100, 50),
+                        intArrayOf(0, 150, 0, 150),
+                        -1
+                    )
                     vibrator?.vibrate(effect)
                 } else {
                     vibrator?.vibrate(longArrayOf(0, 50, 100, 50), -1)
                 }
                 result.success(null)
             }
+
             "stop" -> {
                 vibrator?.cancel()
                 result.success(null)
             }
-            else -> {
-                result.notImplemented()
-            }
+
+            else -> result.notImplemented()
         }
     }
 

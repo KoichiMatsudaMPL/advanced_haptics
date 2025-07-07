@@ -1,14 +1,30 @@
 import 'package:flutter/services.dart';
 
+/// Represents Android's predefined vibration effects (API 29+).
+enum AndroidPredefinedHaptic {
+  click(0),
+  doubleClick(1),
+  tick(2),
+  heavyClick(5),
+  pop(6),
+  thud(7),
+  ringtone1(8);
+
+  const AndroidPredefinedHaptic(this.effectId);
+  final int effectId;
+}
+
 class AdvancedHaptics {
-  static const MethodChannel _channel = MethodChannel('com.example/advanced_haptics');
+  static const MethodChannel _channel =
+      MethodChannel('com.example/advanced_haptics');
 
   /// Checks if the device supports custom haptics.
   /// On iOS, this checks for Core Haptics support (iPhone 8+).
   /// On Android, this checks if the vibrator can control amplitude.
   static Future<bool> hasCustomHapticsSupport() async {
     try {
-      final bool hasSupport = await _channel.invokeMethod('hasCustomHapticsSupport');
+      final bool hasSupport =
+          await _channel.invokeMethod('hasCustomHapticsSupport');
       return hasSupport;
     } on PlatformException {
       return false;
@@ -23,9 +39,11 @@ class AdvancedHaptics {
   ///
   /// This maps directly to Android's `VibrationEffect.createWaveform`.
   /// On iOS, this is emulated with a series of transient haptics (less precise).
-  static Future<void> playWaveform(List<int> timings, List<int> amplitudes) async {
+  static Future<void> playWaveform(
+      List<int> timings, List<int> amplitudes) async {
     if (timings.length != amplitudes.length) {
-      throw ArgumentError('Timings and amplitudes lists must have the same length.');
+      throw ArgumentError(
+          'Timings and amplitudes lists must have the same length.');
     }
     await _channel.invokeMethod('playWaveform', {
       'timings': timings,
@@ -132,4 +150,12 @@ class AdvancedHaptics {
     await playWaveform(timings, amplitudes);
   }
 
+ /// Plays a predefined haptic pattern on Android (API 29+).
+/// These use Android's built-in VibrationEffect constants.
+/// Ignored or simulated on iOS.
+static Future<void> playPredefined(AndroidPredefinedHaptic effect) async {
+  await _channel.invokeMethod('playPredefined', {
+    'effectId': effect.effectId,
+  });
+}
 }

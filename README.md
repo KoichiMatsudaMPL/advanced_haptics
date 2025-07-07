@@ -1,5 +1,4 @@
 
----
 
 # Advanced Haptics
 
@@ -12,12 +11,13 @@ A Flutter plugin for playing powerful, custom haptic feedback patterns. This pac
 
 ## ✨ Features
 
--   ✅ **Unified API** for Android and iOS.
--   🎯 **Custom Waveforms**: Full control of vibration timing and intensity.
+-   ✅ **Unified API**: A single, easy-to-use Dart API for both platforms.
+-   🎯 **Custom Waveforms**: Full control of vibration timing, intensity, and looping.
 -   🍎 **Core Haptics on iOS**: Play custom `.ahap` files for rich, layered tactile feedback.
--   🧠 **Predefined Patterns**: A suite of built-in methods like `lightTap()`, `success()`, `error()`, and more for common use cases.
--   🛡️ **Capability Detection**: A simple method to check if a device supports advanced haptics.
--   🪶 **Graceful Fallback**: Sensible fallback behavior on unsupported devices.
+-   🧠 **Predefined Patterns**: A suite of built-in methods like `lightTap()`, `success()`, `error()` and more.
+-   🧩 **Native Android Effects**: Access system-level vibration effects like `tick`, `heavyClick`, etc.
+-   🛡️ **Capability Detection**: Easily check if a device supports advanced haptics.
+-   🪶 **Graceful Fallbacks**: Sensible defaults for unsupported hardware or platforms.
 
 ---
 
@@ -28,9 +28,9 @@ A Flutter plugin for playing powerful, custom haptic feedback patterns. This pac
 | Waveform            | ✅ Native                | ✅ Emulated             |
 | `.ahap` Playback    | 🔁 Fallback              | ✅ Native               |
 | Amplitude Control   | ✅ Native                | ✅ Native               |
-| Predefined Patterns | ✅ Supported             | ✅ Supported            |
+| Predefined Patterns | ✅ Native + Custom       | ✅ Native               |
 
-> ℹ️ **Note:** iPads do not support Core Haptics. Always use `hasCustomHapticsSupport()` to verify device capabilities before playing complex patterns.
+> ℹ️ **Note:** iPads do not support Core Haptics. Always use `hasCustomHapticsSupport()` before playing advanced patterns to ensure a good user experience.
 
 ---
 
@@ -38,34 +38,31 @@ A Flutter plugin for playing powerful, custom haptic feedback patterns. This pac
 
 ### 1. Install
 
-Add `advanced_haptics` to your `pubspec.yaml` dependencies.
+Add `advanced_haptics` to your `pubspec.yaml` dependencies:
 
 ```yaml
 dependencies:
   advanced_haptics: ^0.0.6 # Use the latest version
 ```
 
-Then, run `flutter pub get`.
+Then, run `flutter pub get` in your terminal.
 
 ### 2. Android Setup
 
 Add the `VIBRATE` permission to your `android/app/src/main/AndroidManifest.xml`:
 
 ```xml
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.your_app">
-
+<manifest ...>
     <!-- Add this line -->
     <uses-permission android:name="android.permission.VIBRATE"/>
-
-   <application ...>
-   </application>
+    <application ...>
+    </application>
 </manifest>
 ```
 
 ### 3. iOS Setup
 
-To play custom patterns on iOS, add your `.ahap` files to your project assets (e.g., under an `assets/haptics/` folder) and declare them in your `pubspec.yaml`:
+To play custom patterns on iOS, add your `.ahap` files to your project assets (e.g., under an `assets/haptics/` folder) and declare the folder in your `pubspec.yaml`:
 
 ```yaml
 flutter:
@@ -73,30 +70,26 @@ flutter:
     - assets/haptics/
 ```
 
-### Creating `.ahap` Files (for iOS)
-
+#### Creating `.ahap` Files (for iOS)
 An `.ahap` file is a JSON file that describes a haptic pattern. The best way to create them is with a visual tool.
 
--   **Recommended Tool:** Use [Captain AHAP](https://apps.apple.com/us/app/captain-ahap/id1502445293) on macOS to visually design patterns and preview them on a connected iPhone.
+-   **Recommended Tool:** Use **[Captain AHAP](https://apps.apple.com/us/app/captain-ahap/id1502445293)** on macOS to visually design patterns and preview them on a connected iPhone.
 -   **Manual Creation:** You can also write the JSON by hand. Here is an example of a single, sharp tap:
-
-```json
-{
-  "Version": 1,
-  "Pattern": [
+    ```json
     {
-      "Event": {
-        "Time": 0.0,
-        "EventType": "HapticTransient",
-        "EventParameters": [
-          { "ParameterID": "HapticIntensity", "ParameterValue": 1.0 },
-          { "ParameterID": "HapticSharpness", "ParameterValue": 1.0 }
-        ]
-      }
+      "Version": 1,
+      "Pattern": [
+        {
+          "Event": { "Time": 0.0, "EventType": "HapticTransient",
+            "EventParameters": [
+              { "ParameterID": "HapticIntensity", "ParameterValue": 1.0 },
+              { "ParameterID": "HapticSharpness", "ParameterValue": 1.0 }
+            ]
+          }
+        }
+      ]
     }
-  ]
-}
-```
+    ```
 
 ---
 
@@ -108,53 +101,58 @@ Import the package in your Dart file:
 import 'package:advanced_haptics/advanced_haptics.dart';
 ```
 
-### ✅ Check for Support
-
-Before playing complex patterns, it's wise to check if the hardware supports them.
+### ✅ Capability Check
 
 ```dart
-if (await AdvancedHaptics.hasCustomHapticsSupport()) {
-  // Safe to use advanced feedback
+final bool hasSupport = await AdvancedHaptics.hasCustomHapticsSupport();
+if (hasSupport) {
+  // Safe to use advanced haptics
 }
 ```
 
-### ⚡ Predefined Haptic Patterns
+### ⚡ Predefined Taps & Buzzes
 
 Use these for quick, consistent feedback across your app.
 
 ```dart
-// Simple taps
 await AdvancedHaptics.lightTap();
 await AdvancedHaptics.mediumTap();
-await AdvancedHaptics.selectionClick(); // A crisp, UI-element-like click
-
-// Rumbles and Buzzes
 await AdvancedHaptics.heavyRumble();
+await AdvancedHaptics.selectionClick();
 await AdvancedHaptics.successBuzz();
-
-// Notifiers
-await AdvancedHaptics.success(); // A distinct double-tap
-await AdvancedHaptics.error();   // A clear failure/alert pattern
+await AdvancedHaptics.success();
+await AdvancedHaptics.error();
 ```
 
-### 🎛️ Custom Waveform (Android Preferred)
+### 🎛️ Custom Waveform
 
-Design unique patterns with precise control over timings (in milliseconds) and amplitudes (0-255).
+Design unique patterns with precise control over timings (in milliseconds), amplitudes (0-255), and an optional repeat index.
 
 ```dart
+// Plays a pattern, with no repeat
 await AdvancedHaptics.playWaveform(
-  [0, 100, 150, 100],    // Timings: [delay, on, off, on]
-  [0, 180, 0, 255],      // Amplitudes for each timing segment
+  [0, 100, 100, 200],     // Timings: [delay, on, off, on]
+  [0, 180, 0, 255],       // Amplitudes for each segment
+  repeat: -1              // -1 means no repeat
 );
 ```
 
-### 🍏 Play `.ahap` File (iOS Only)
+### 🍏 Play `.ahap` File on iOS
 
 Trigger your custom-designed haptic experiences on supported iPhones.
 
 ```dart
-await AdvancedHaptics.playAhap('assets/haptics/rumble.ahap');
+await AdvancedHaptics.playAhap('assets/haptics/success.ahap');
 ```
+
+### 📲 Android Native Effects (API 29+)
+
+Play Android's built-in system haptic effects using an enum.
+
+```dart
+await AdvancedHaptics.playPredefined(AndroidPredefinedHaptic.heavyClick);
+```
+Available enums: `click`, `doubleClick`, `tick`, `heavyClick`, `pop`, `thud`, `ringtone1`.
 
 ### 🛑 Stop All Vibrations
 
@@ -168,25 +166,20 @@ await AdvancedHaptics.stop();
 
 ## 🧠 API Reference
 
-| Method                                       | Description                                                                    |
-| -------------------------------------------- | ------------------------------------------------------------------------------ |
-| `Future<bool> hasCustomHapticsSupport()`     | Checks if the device supports amplitude-controlled haptics.                    |
-| `playWaveform(timings, amplitudes)`          | Plays a custom vibration pattern, best for Android.                            |
-| `playAhap(path)`                             | Plays a custom `.ahap` haptic file on iOS (with a fallback on Android).        |
-| `stop()`                                     | Stops any ongoing vibration immediately.                                       |
-| `success()`                                  | Plays a predefined double-tap success pattern.                                 |
-| `error()`                                    | Plays a predefined alert/failure pattern.                                      |
-| `lightTap()`                                 | Plays quick, subtle feedback. Ideal for minor UI interactions.                 |
-| `mediumTap()`                                | Plays mid-strength feedback.                                                   |
-| `selectionClick()`                           | Plays a crisp, click-like haptic for selections (like a picker wheel).         |
-| `heavyRumble()`                              | Plays strong, heavy feedback.                                                  |
-| `successBuzz()`                              | Plays a buzz-buzz style success pattern.                                       |
+| Method                                      | Description                                                                    |
+| ------------------------------------------- | ------------------------------------------------------------------------------ |
+| `Future<bool> hasCustomHapticsSupport()`    | Checks if the device supports amplitude control.                               |
+| `playWaveform(timings, amplitudes, repeat)` | Plays a precise custom vibration pattern. Best for Android.                    |
+| `playAhap(path)`                            | Plays a `.ahap` Core Haptics file on iOS (with a fallback on Android).         |
+| `playPredefined(effect)`                    | Plays Android's native haptic effect (requires API 29+).                       |
+| `stop()`                                    | Cancels any active haptic feedback.                                            |
+| `lightTap()` / `mediumTap()` etc.           | A suite of standard UI feedback presets for common interactions.               |
 
 ---
 
 ## 🙌 Contributing
 
-Pull requests and issues are welcome! If you encounter a bug, please provide logs, device information, and steps to reproduce. When contributing code, please ensure it's tested across a range of devices if possible.
+We welcome issues, feature requests, and pull requests! If submitting code, please test on both Android and iOS where applicable and provide details on the devices used.
 
 ## 📄 License
 
