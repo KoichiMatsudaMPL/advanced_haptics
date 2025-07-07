@@ -32,3 +32,12 @@
 ## 1.0.1
 
 - Updated ReadMe
+
+
+## 1.0.2
+
+- Platform specific methods Android
+
+## 1.0.3
+
+- Platform specific methods iOS and better organized readme
