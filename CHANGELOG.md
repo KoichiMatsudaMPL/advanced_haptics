@@ -41,3 +41,8 @@
 ## 1.0.3
 
 - Platform specific methods iOS and better organized readme
+
+
+## 1.0.4
+
+- Updated ReadMe
