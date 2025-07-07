@@ -112,7 +112,8 @@ await AdvancedHaptics.error();
 Immediately cancels any ongoing haptic effect on either platform.
 
 ```dart
-await AdvancedHaptics.stop();
+///atTime for iOS only
+await AdvancedHaptics.stop(atTime: 0.0);
 ```
 
 ---
@@ -163,10 +164,10 @@ These methods control the state of the active `CHHapticAdvancedPatternPlayer` on
 
 ```dart
 // Pause the currently playing haptic pattern
-await AdvancedHaptics.pause();
+await AdvancedHaptics.pause(atTime: 0.0);
 
 // Resume a paused pattern
-await AdvancedHaptics.resume();
+await AdvancedHaptics.resume(atTime: 0.0);
 
 // Jump to 0.5 seconds into the pattern
 await AdvancedHaptics.seek(offset: 0.5);
