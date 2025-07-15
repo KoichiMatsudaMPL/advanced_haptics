@@ -127,27 +127,52 @@ public class AdvancedHapticsPlugin: NSObject, FlutterPlugin {
         result(FlutterError(code: "INVALID_ARGS", message: "Invalid arguments for waveform", details: nil))
         return
       }
+
+      guard timings.count == amplitudes.count else {
+        result(FlutterError(code: "INVALID_ARGS", message: "The 'timings' and 'amplitudes' arrays must have the same length.", details: nil))
+        return
+      }
       
       var events = [CHHapticEvent]()
       var relativeTime: TimeInterval = 0
+
       for i in 0..<timings.count {
-        if i % 2 != 0 {
-          let intensity = CHHapticEventParameter(parameterID: .hapticIntensity, value: Float(amplitudes[i] / 255.0))
+        let duration = timings[i] / 1000.0 // Convert milliseconds to seconds
+        let amplitudeValue = amplitudes[i]
+
+        // --- THE FIX ---
+        // A continuous event must have both an amplitude AND a positive duration.
+        // This prevents the -4823 error.
+        if amplitudeValue > 0 && duration > 0 {
+          let intensity = CHHapticEventParameter(parameterID: .hapticIntensity, value: Float(amplitudeValue / 255.0))
           let sharpness = CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.8)
-          let event = CHHapticEvent(eventType: .hapticTransient, parameters: [intensity, sharpness], relativeTime: relativeTime)
+
+          let event = CHHapticEvent(
+            eventType: .hapticContinuous,
+            parameters: [intensity, sharpness],
+            relativeTime: relativeTime,
+            duration: duration
+          )
           events.append(event)
         }
-        relativeTime += timings[i] / 1000.0
+        
+        // Always advance the relative time for the next event, even for pauses or zero-duration segments.
+        relativeTime += duration
+      }
+
+      // It's possible to have no valid events (e.g., all durations were 0).
+      // In this case, we can just succeed without playing anything.
+      guard !events.isEmpty else {
+          result(nil)
+          return
       }
 
       do {
         let pattern = try CHHapticPattern(events: events, parameters: [])
-        // --- CHANGE 3: Use the new helper function ---
         _playPattern(pattern: pattern, atTime: startTime, result: result)
       } catch {
         result(FlutterError(code: "PATTERN_ERROR", message: "Failed to create pattern from waveform data.", details: error.localizedDescription))
       }
-
     case "success":
       // --- CHANGE 4: Make one-shot effects also use the shared player ---
       // This ensures that calling success() will correctly interrupt any ongoing haptic.
