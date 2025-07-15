@@ -95,9 +95,26 @@ public class AdvancedHapticsPlugin: NSObject, FlutterPlugin {
       }
 
       do {
-        let pattern = try CHHapticPattern(contentsOf: ahapUrl)
-        // --- CHANGE 2: Use the new helper function ---
-        _playPattern(pattern: pattern, atTime: startTime, result: result)
+          let pattern: CHHapticPattern
+          if #available(iOS 16.0, *) {
+              pattern = try CHHapticPattern(contentsOf: ahapUrl)
+          } else {
+              let data = try Data(contentsOf: ahapUrl)
+              let rawJson = try JSONSerialization.jsonObject(with: data)
+              guard let raw = rawJson as? [String: Any] else {
+                  throw NSError(domain: "HapticError", code: 1,
+                                userInfo: [NSLocalizedDescriptionKey: "Invalid AHAP JSON"])
+              }
+              var typed: [CHHapticPattern.Key: Any] = [:]
+              for (k, v) in raw {
+                  // CHHapticPattern.Key's init(rawValue: String) is non-failable.
+                  // It always creates a CHHapticPattern.Key, so 'if let' is not needed.
+                  let key = CHHapticPattern.Key(rawValue: k)
+                  typed[key] = v
+              }
+              pattern = try CHHapticPattern(dictionary: typed)
+          }
+            _playPattern(pattern: pattern, atTime: startTime, result: result)
       } catch {
         result(FlutterError(code: "PATTERN_ERROR", message: "Failed to create pattern from AHAP file.", details: error.localizedDescription))
       }
