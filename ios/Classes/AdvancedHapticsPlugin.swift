@@ -42,17 +42,28 @@ public class AdvancedHapticsPlugin: NSObject, FlutterPlugin {
     }
   }
 
-  // --- CHANGE 1: Create a private helper function to reduce duplication ---
+  // Create a private helper function to reduce duplication
   private func _playPattern(pattern: CHHapticPattern, atTime: TimeInterval, result: @escaping FlutterResult) {
+    // Ensure engine is available and running
+    do {
+      try ensureEngineRunning()
+    } catch {
+      result(FlutterError(code: "ENGINE_ERROR", message: "Haptic engine unavailable", details: error.localizedDescription))
+      return
+    }
+
     guard let engine = engine else {
         result(FlutterError(code: "ENGINE_NIL", message: "Haptic engine is not available.", details: nil))
         return
     }
 
     do {
-      // Always stop the previous player before starting a new one.
-      try advancedPlayer?.stop(atTime: CHHapticTimeImmediate)
-      
+      // Stop and release the previous player before starting a new one.
+      if let player = advancedPlayer {
+        try? player.stop(atTime: CHHapticTimeImmediate)
+        advancedPlayer = nil
+      }
+
       advancedPlayer = try engine.makeAdvancedPlayer(with: pattern)
       advancedPlayer?.loopEnabled = false // Default to no loop
       // The completion handler could be used to send a message back to Dart if needed
@@ -61,8 +72,52 @@ public class AdvancedHapticsPlugin: NSObject, FlutterPlugin {
       }
       try advancedPlayer?.start(atTime: atTime)
       result(nil)
-    } catch {
-      result(FlutterError(code: "PLAYBACK_ERROR", message: "Failed to play haptic pattern", details: error.localizedDescription))
+    } catch let error as NSError {
+      result(FlutterError(code: "PLAYBACK_ERROR", message: "Failed to play haptic pattern", details: "[\(error.domain):\(error.code)] \(error.localizedDescription)"))
+    }
+  }
+
+  // Ensure haptic engine is running, recreate if needed
+  private func ensureEngineRunning() throws {
+    guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else {
+      throw NSError(domain: "AdvancedHaptics", code: -1, userInfo: [NSLocalizedDescriptionKey: "Haptics not supported"])
+    }
+
+    // Try to start existing engine
+    if let existingEngine = engine {
+      do {
+        try existingEngine.start()
+        return
+      } catch let startError as NSError {
+        // If already running (-4806), that's fine
+        if startError.code == -4806 {
+          return
+        }
+        // Other errors mean engine is invalid, recreate it
+      }
+    }
+
+    // Create new engine
+    engine = try CHHapticEngine()
+    try engine?.start()
+
+    // Invalidate the old player since engine was recreated
+    advancedPlayer = nil
+
+    // Re-setup handlers
+    engine?.resetHandler = { [weak self] in
+      print("Haptic engine reset, restarting...")
+      do {
+        try self?.engine?.start()
+        // Also invalidate player when engine resets
+        self?.advancedPlayer = nil
+      } catch {
+        print("Failed to restart the haptic engine: \(error)")
+      }
+    }
+
+    engine?.stoppedHandler = { reason in
+      print("Haptic engine stopped for reason: \(reason.rawValue)")
     }
   }
 
