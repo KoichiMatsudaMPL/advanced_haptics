@@ -56,11 +56,17 @@ class AdvancedHaptics {
       throw ArgumentError(
           'Timings and amplitudes lists must have the same length.');
     }
-    await _channel.invokeMethod('playWaveform', {
-      'timings': timings,
-      'amplitudes': amplitudes,
-      'atTime': atTime,
-    });
+    try {
+      await _channel.invokeMethod('playWaveform', {
+        'timings': timings,
+        'amplitudes': amplitudes,
+        'atTime': atTime,
+      });
+    } on PlatformException catch (e) {
+      if (kDebugMode) {
+        print('AdvancedHaptics: playWaveform failed - ${e.message}');
+      }
+    }
   }
 
   /// Plays a custom haptic pattern from an .ahap file on iOS.
@@ -70,10 +76,16 @@ class AdvancedHaptics {
   ///
   /// On Android, this falls back to a predefined, strong vibration pattern.
   static Future<void> playAhap(String ahapPath, {double atTime = 0.0}) async {
-    await _channel.invokeMethod('playAhap', {
-      'path': ahapPath,
-      'atTime': atTime,
-    });
+    try {
+      await _channel.invokeMethod('playAhap', {
+        'path': ahapPath,
+        'atTime': atTime,
+      });
+    } on PlatformException catch (e) {
+      if (kDebugMode) {
+        print('AdvancedHaptics: playAhap failed - ${e.message}');
+      }
+    }
   }
 
   // --------------------------------------------
@@ -87,7 +99,13 @@ class AdvancedHaptics {
   ///
   /// [atTime] - The time, in seconds, to schedule the pause. Use `0.0` for immediate.
   static Future<void> pause({double atTime = 0.0}) async {
-    await _channel.invokeMethod('pause', {'atTime': atTime});
+    try {
+      await _channel.invokeMethod('pause', {'atTime': atTime});
+    } on PlatformException catch (e) {
+      if (kDebugMode) {
+        print('AdvancedHaptics: pause failed - ${e.message}');
+      }
+    }
   }
 
   /// Resumes a paused haptic player.
@@ -97,7 +115,13 @@ class AdvancedHaptics {
   ///
   /// [atTime] - The time, in seconds, to schedule the resumption. Use `0.0` for immediate.
   static Future<void> resume({double atTime = 0.0}) async {
-    await _channel.invokeMethod('resume', {'atTime': atTime});
+    try {
+      await _channel.invokeMethod('resume', {'atTime': atTime});
+    } on PlatformException catch (e) {
+      if (kDebugMode) {
+        print('AdvancedHaptics: resume failed - ${e.message}');
+      }
+    }
   }
 
   /// Seeks to a specific point in the active haptic pattern.
@@ -107,7 +131,13 @@ class AdvancedHaptics {
   ///
   /// [offset] - The time, in seconds, to seek to within the pattern.
   static Future<void> seek({required double offset}) async {
-    await _channel.invokeMethod('seek', {'offset': offset});
+    try {
+      await _channel.invokeMethod('seek', {'offset': offset});
+    } on PlatformException catch (e) {
+      if (kDebugMode) {
+        print('AdvancedHaptics: seek failed - ${e.message}');
+      }
+    }
   }
 
   /// Stops any currently playing haptic pattern.
@@ -117,7 +147,13 @@ class AdvancedHaptics {
   ///
   /// [atTime] - (iOS only) The time, in seconds, to schedule the stop. Use `0.0` for immediate.
   static Future<void> stop({double atTime = 0.0}) async {
-    await _channel.invokeMethod('stop', {'atTime': atTime});
+    try {
+      await _channel.invokeMethod('stop', {'atTime': atTime});
+    } on PlatformException catch (e) {
+      if (kDebugMode) {
+        print('AdvancedHaptics: stop failed - ${e.message}');
+      }
+    }
   }
 
   /// Cancels the haptic player immediately, ignoring any scheduled events.
@@ -125,7 +161,13 @@ class AdvancedHaptics {
   /// **Platform Specific:** This is for cancelling a player on iOS.
   /// On Android, this method currently has no effect beyond what `stop()` does.
   static Future<void> cancel() async {
-    await _channel.invokeMethod('cancel');
+    try {
+      await _channel.invokeMethod('cancel');
+    } on PlatformException catch (e) {
+      if (kDebugMode) {
+        print('AdvancedHaptics: cancel failed - ${e.message}');
+      }
+    }
   }
 
   // --------------------------------------------
@@ -134,7 +176,13 @@ class AdvancedHaptics {
 
   /// Plays a simple, predefined "success" haptic.
   static Future<void> success() async {
-    await _channel.invokeMethod('success');
+    try {
+      await _channel.invokeMethod('success');
+    } on PlatformException catch (e) {
+      if (kDebugMode) {
+        print('AdvancedHaptics: success failed - ${e.message}');
+      }
+    }
   }
 
   /// Plays a quick, light tap haptic feedback.
@@ -190,9 +238,15 @@ class AdvancedHaptics {
   static Future<void> playPredefined(AndroidPredefinedHaptic effect) async {
     // We can add a platform check to avoid an unnecessary method call
     if (defaultTargetPlatform == TargetPlatform.android) {
-      await _channel.invokeMethod('playPredefined', {
-        'effectId': effect.effectId,
-      });
+      try {
+        await _channel.invokeMethod('playPredefined', {
+          'effectId': effect.effectId,
+        });
+      } on PlatformException catch (e) {
+        if (kDebugMode) {
+          print('AdvancedHaptics: playPredefined failed - ${e.message}');
+        }
+      }
     }
   }
 }
